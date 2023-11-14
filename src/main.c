@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include "../include/mymemory.h"
 
 int input();
 
@@ -9,11 +10,26 @@ int main()
 
     do {
         // printing menu
+        printf("------- Menu -------\n");
+        printf("1. Memory Init\n");
+        printf("2. Allocation\n");
+        printf("3. Free\n");
+        printf("4. Display\n");
+        printf("5. Stats\n");
+        printf("6. Compact\n");
+        printf("7. Clean up\n");
+        printf("8. Exit\n");
+        printf("\nEnter your choice: ");
+        
         choice = input();
 
         switch (choice) {
             case 1: {
-                printf("ONE\n");
+                printf("Size: ");
+                int size = input();
+                
+                void *init = mymemory_init(size);
+                printf("Ptr: %p\n", init);
                 break;
             }
             case 2: {
@@ -55,17 +71,6 @@ int main()
 
 int input()
 {
-    printf("------- Menu -------\n");
-    printf("1. Memory Init\n");
-	printf("2. Allocation\n");
-	printf("3. Free\n");
-    printf("4. Display\n");
-    printf("5. Stats\n");
-    printf("6. Compact\n");
-    printf("7. Clean up\n");
-    printf("8. Exit\n");
-	printf("\nEnter your choice: ");
-
 	int number;
 	scanf("%d", &number);
 	return (number);
