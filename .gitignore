@@ -2,7 +2,7 @@
 *.d
 
 # Object files
-./bin/*.o
+./bin/*
 *.ko
 *.obj
 *.elf
@@ -17,10 +17,7 @@
 *.pch
 
 # Libraries
-*.lib
-*.a
-*.la
-*.lo
+./lib/*
 
 # Shared objects (inc. Windows DLLs)
 *.dll
