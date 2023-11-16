@@ -6,9 +6,21 @@
 // Implementations
 mymemory_t* mymemory_init(size_t size) 
 {
-    mymemory_t *memory = malloc(size * sizeof(mymemory_t));
+    mymemory_t *memory = (mymemory_t*)malloc(sizeof(mymemory_t));
+    // Falha na alocação de memória para mymemory_t
+    if (memory == NULL) {
+        return NULL;
+    }
+
+    memory->pool = malloc(size);
+    // Falha na alocação de memória para o pool
+    if (memory->pool == NULL) {
+        free(memory);
+        return NULL;
+    }
+
     memory->total_size = size;
-    memory->pool = &memory;
+    memory->head = NULL;
     return memory;
 }
 
