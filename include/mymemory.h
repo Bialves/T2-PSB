@@ -1,3 +1,5 @@
+#ifndef MYMEMORY_H
+#define MYMEMORY_H
 #include <stddef.h>
 
 typedef struct allocation 
@@ -23,3 +25,4 @@ void mymemory_display(mymemory_t *memory);
 void mymemory_stats(mymemory_t *memory);
 void mymemory_compact(mymemory_t *memory);
 void mymemory_cleanup(mymemory_t *memory);
+#endif
