@@ -14,7 +14,7 @@ typedef struct
 {
     void *pool; // ponteiro para o bloco de memória real
     size_t total_size;
-    allocation_t *head;
+    allocation_t *head; // ponteiro para a lista encadeada
 } mymemory_t;
 
 

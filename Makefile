@@ -1,8 +1,8 @@
-# Comandos
+# Tokens
 CC = gcc
 CFLAGS = -Wall -O2
 ARCHIVE = ar rcs
-# Diretórios
+# Dir
 BUILD = ./build/
 BIN = ./bin/
 LIB = ./lib/

@@ -25,8 +25,63 @@ mymemory_t* mymemory_init(size_t size)
 }
 
 void* mymemory_alloc(mymemory_t *memory, size_t size);
-void mymemory_free(mymemory_t *memory, void *ptr);
-void mymemory_display(mymemory_t *memory);
+void mymemory_free(mymemory_t *memory, void *ptr)
+{
+    /*
+    * Necessário realizar um compact antes
+    * de percorrer, para evitar cair em gaps
+    */
+    allocation_t *current = memory->head; // Começo da lista
+    allocation_t *prev = NULL; // Var auxiliar para trabalhar referências
+    
+    // Percorre a lista em busca do endereço informado
+    while (current != NULL) {
+        // Se encontrou o endereço...
+        if (current->start == ptr) {
+            if (prev != NULL) { // Se prev não é null
+                prev->next = current->next;
+            } else { // Senão, remoção do inicio
+                memory->head = current->next;
+            }
+            
+            free(current); // Por fim, libera o endereço
+            return;
+        }
+        prev = current;
+        current = current->next;
+    }
+}
+
+void mymemory_display(mymemory_t *memory)
+{
+    /*
+    * Necessário realizar um compact antes
+    * de percorrer, para evitar cair em gaps
+    */
+    allocation_t *current = memory->head; // Começo da lista
+
+    while (current != NULL) {
+        printf("Start: %p, Size: %zu\n", current->start, current->size);
+        current = current->next;
+    }
+}
+
 void mymemory_stats(mymemory_t *memory);
 void mymemory_compact(mymemory_t *memory);
-void mymemory_cleanup(mymemory_t *memory);
+
+void mymemory_cleanup(mymemory_t *memory)
+{
+    /*
+    * Necessário realizar um compact antes
+    * de limpar, para evitar cair em gaps
+    */
+
+    allocation_t *current = memory->head; // Começo da lista
+
+    while (current != NULL) { // Enquanto houver blocos alocados...
+        allocation_t *next = current->next; // next recebe o próximo
+        free(current); // O bloco atual é liberado
+        current = next;
+    }
+    free(memory); // Por fim, a memória total é liberada
+}
