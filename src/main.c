@@ -14,7 +14,7 @@ int main()
     * caso ocorra falha o programa é encerrado
     */
    size_t size;
-   printf("------- WELCOME! -------\n> Memory Init\nEnter a size: ");
+   printf("------- WELCOME! -------\n> Memory Init\nEnter a size (bytes): ");
    scanf("%zu", &size);
 
    mem = mymemory_init(size);
@@ -40,9 +40,16 @@ int main()
 
       switch (choice) {
          case 1: {
-            printf("> Alloc Block\n--\n");
-            // Implementar função
-            printf("\nAllocation successfully!\n");
+            size_t size_alloc;
+            printf("> Alloc Block\nEnter a size (bytes): ");
+            scanf("%zu", &size_alloc);
+
+            allocation_t *block = (allocation_t *)mymemory_alloc(mem, size_alloc);
+            if (block == NULL) {
+               printf("\nERROR: Allocation failure!\n");
+            } else {
+               printf("\nAllocation successfully!\n");
+            }
             break;
          }
          case 2: {
@@ -61,7 +68,7 @@ int main()
          }
          case 4: {
             printf("> Memory Statics\n");
-            // Implementar função
+            mymemory_stats(mem);
             break;
          }
          case 5: {

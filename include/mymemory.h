@@ -23,6 +23,5 @@ void* mymemory_alloc(mymemory_t *memory, size_t size);
 void mymemory_free(mymemory_t *memory, void *ptr);
 void mymemory_display(mymemory_t *memory);
 void mymemory_stats(mymemory_t *memory);
-void mymemory_compact(mymemory_t *memory);
 void mymemory_cleanup(mymemory_t *memory);
 #endif
