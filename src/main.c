@@ -58,7 +58,6 @@ int main()
             scanf("%lx", &ptr);
 
             mymemory_free(mem, (void *)ptr);
-            printf("Free successfully!\n");
             break;
          }
          case 3: {

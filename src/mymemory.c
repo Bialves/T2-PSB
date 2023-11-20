@@ -129,22 +129,31 @@ void mymemory_free(mymemory_t *memory, void *ptr)
             prev->next = current->next;
          }
          else { // Senão, remoção do inicio
-            current->next->start = memory->pool; // Trata remoção do início
-            memory->head = current->next;
+            // Trata remoção do início
+            if (current->next == NULL) { // Se não há próximo...
+               memory->head = NULL;
+            } 
+            else { // Se há...
+               current->next->start = memory->pool;
+               memory->head = current->next;
+            }
          }
 
          free(current); // Por fim, libera o endereço
+         printf("Free successfully!\n");
          return;
       }
       // Atualiza as referências para avançar na lista
       prev = current;
       current = current->next;
    }
+
+   printf("ERROR: invalid address!\n");
 }
 
 void mymemory_display(mymemory_t *memory)
 {
-   if (memory == NULL) {
+   if (memory == NULL || memory->head == NULL) {
       printf("ERROR: invalid arguments");
       return;
    }
@@ -176,7 +185,7 @@ void mymemory_display(mymemory_t *memory)
 
 void mymemory_stats(mymemory_t *memory)
 {
-   if (memory == NULL) {
+   if (memory == NULL || memory->head == NULL) {
       printf("ERROR: invalid arguments");
       return;
    }
