@@ -23,7 +23,7 @@ int main()
       printf("ERROR: initialization failure\n");
       return 1; // Encerra execução
    }
-   printf("Memory initialization successfully! Ptr: %p\n", mem);
+   printf("Memory initialization successfully!\nMemory ptrs:\nInit: %p - Pool: %p\n", mem, mem->pool);
 
    do {
       // Imprime menu de opções
@@ -44,11 +44,11 @@ int main()
             printf("> Alloc Block\nEnter a size (bytes): ");
             scanf("%zu", &size_alloc);
 
-            allocation_t *block = (allocation_t *)mymemory_alloc(mem, size_alloc);
+            void *block = mymemory_alloc(mem, size_alloc);
             if (block == NULL) {
                printf("\nERROR: Allocation failure!\n");
             } else {
-               printf("\nAllocation successfully!\n");
+               printf("\nAllocation successfully! Block ptr: %p\n", block);
             }
             break;
          }
