@@ -151,12 +151,10 @@ void mymemory_display(mymemory_t *memory)
 
    allocation_t *current = memory->head; // Começo da lista
    char *prev = (char *)current->start; // Var auxiliar
-   size_t free = memory->total_size;
    int num = 0;
    int gap = 0;
    // Enquanto houver blocos alocados...
    while (current != NULL) {
-      free -= current->size;
       if (prev != (char *)current->start) { // Identificou um gap de memória livre
          gap++;
          printf("Gap %d - start: %p, size: %zu\n", gap, prev, (size_t)((char *)current->start - prev));
@@ -169,7 +167,8 @@ void mymemory_display(mymemory_t *memory)
       current = current->next;
    }
    // Gap do final da memória total
-   if (free > 0 && current == NULL) {
+   size_t free = (size_t)(((char *)memory->pool) + memory->total_size) - (size_t)prev;
+   if (free > 0) {
       gap++;
       printf("Gap %d - start: %p, size: %zu\n", gap, prev, free);
    }
