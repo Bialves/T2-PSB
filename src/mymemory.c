@@ -31,63 +31,84 @@ mymemory_t *mymemory_init(size_t size)
 }
 // Best Fit
 void *mymemory_alloc(mymemory_t *memory, size_t size)
-{
-   if (size == 0 || size > memory->total_size) { // Argumento inválido
+{  // Argumentos inválidos
+   if (size == 0 || size > memory->total_size) { 
       return NULL; 
    }
 
-   allocation_t *best_block = NULL;
+   /**
+    * -------------------------------------------------------------
+    * Alocação no início da lista
+   */
+   allocation_t *previous = (allocation_t*)malloc(sizeof(allocation_t));
+   if (previous == NULL) { // Se a inicialização falhou...
+      return NULL;
+   }
    allocation_t *current = memory->head; // Usado para percorrer a lista
-   
-   // Primeiro bloco a ser inserido
    if (current == NULL) {
-      best_block = (allocation_t*)malloc(sizeof(allocation_t));
-      if (best_block == NULL) { // Se a inicialização falhou...
-         return NULL;
-      }
-      best_block->size = size;
+      previous->size = size;
       /**
        * Ptr do início do bloco vai ser o
        * ptr de início do pool da memória
       */
-      best_block->start = (char *)memory->pool;
-      memory->head = best_block;
-      best_block->next = NULL;
-      return best_block->start;
+      previous->start = (char *)memory->pool;
+      memory->head = previous;
+      previous->next = NULL;
+      return previous->start;
    }
 
+   /**
+    * ------------------------------------------------------------
+    * Alocação pelo meio/fim da lista
+   */
    size_t best_size = SIZE_MAX; // Inicializa com um valor máx
-   size_t free = memory->total_size;
-
+   char *ptr_prev = (char *)current->start; // Var ptr auxiliar
+   allocation_t *prev = NULL; // Var auxiliar
+   
    // Percorre a lista...
    while (current != NULL) {
-      free -= current->size;
-      if (current->size >= size && current->size < best_size) {
-         best_block = current;
-         best_size = current->size;
+      if (ptr_prev != (char *)current->start) {
+         size_t gap = (size_t)((char *)current->start - ptr_prev);
+         if (best_size > gap && gap >= size) {
+            previous = prev;
+            best_size = gap;
+
+            if (best_size == size) { // Bloco do tam ideal
+               break;
+            }
+         }
       }
+      // Fim da lista e não encontrou gaps, mas há espaço para armezenar
+      if (current->next == NULL && best_size == SIZE_MAX &&
+         (size_t)((char *)memory->pool + memory->total_size) - (size_t)((char *)current->start + current->size) >= size) {
+         previous = current;
+         best_size = (((size_t)(char *)memory->pool) + memory->total_size) - (((size_t)(char *)previous->start) + previous->size);
+         break;
+      }
+      
+      ptr_prev = (char *)current->start + current->size; // Ptr para o fim do bloco atual
+      prev = current;
       current = current->next;
    }
 
-   if (best_block == NULL) { // Não blocos capazes de armazenar
+   if (best_size == SIZE_MAX) { // Não há gap capaz de armazenar o bloco
+      free(previous);
       return NULL;
-   }
-
-   // Verifica se é possível dividir o bloco para alocar apenas a quantidade necessária
-   if (best_size > size + sizeof(allocation_t)) {
-      allocation_t *new_allocation = (allocation_t*)malloc(sizeof(allocation_t));
-      if (new_allocation == NULL) {
-         return NULL; // Falha na alocação para o novo bloco
+   } else { // Há um gap capaz de armazenar o bloco
+      allocation_t *new_allocation = (allocation_t *)malloc(sizeof(allocation_t));
+      if (new_allocation == NULL) { // Falha na alocação para o novo bloco
+         free(previous);
+         return NULL;
       }
 
-      new_allocation->start = (char *)best_block->start + size;
-      new_allocation->size = best_size - size - sizeof(allocation_t);
-      new_allocation->next = NULL;
-      best_block->next = new_allocation;
-      return new_allocation->start;
-   } 
+      new_allocation->start = (char *)(previous->start + previous->size);
+      new_allocation->size = size;
+      new_allocation->next = previous->next; // O novo bloco aponta para o bloco seguinte ao previous
+      previous->next = new_allocation; // previous aponta para o novo bloco
 
-   return NULL;
+      // printf("Previous - start: %p, size: %zu, next start: %p\n", previous->start, previous->size, previous->next->start);
+      return new_allocation->start;
+   }
 }
 
 void mymemory_free(mymemory_t *memory, void *ptr)
@@ -108,6 +129,7 @@ void mymemory_free(mymemory_t *memory, void *ptr)
             prev->next = current->next;
          }
          else { // Senão, remoção do inicio
+            current->next->start = memory->pool; // Trata remoção do início
             memory->head = current->next;
          }
 
@@ -128,12 +150,28 @@ void mymemory_display(mymemory_t *memory)
    }
 
    allocation_t *current = memory->head; // Começo da lista
+   char *prev = (char *)current->start; // Var auxiliar
+   size_t free = memory->total_size;
    int num = 0;
+   int gap = 0;
    // Enquanto houver blocos alocados...
    while (current != NULL) {
+      free -= current->size;
+      if (prev != (char *)current->start) { // Identificou um gap de memória livre
+         gap++;
+         printf("Gap %d - start: %p, size: %zu\n", gap, prev, (size_t)((char *)current->start - prev));
+      }
+      // Encontrou um bloco contíguo
       num++;
-      printf("Block %d -  start: %p, size: %zu\n", num, current->start, current->size);
+      printf("Block %d - start: %p, size: %zu\n", num, current->start, current->size);
+ 
+      prev = (char *)current->start + current->size;
       current = current->next;
+   }
+   // Gap do final da memória total
+   if (free > 0 && current == NULL) {
+      gap++;
+      printf("Gap %d - start: %p, size: %zu\n", gap, prev, free);
    }
 }
 
@@ -148,8 +186,8 @@ void mymemory_stats(mymemory_t *memory)
    int total_allocations = 0;
    size_t total_allocated_memory = 0;
    size_t total_free_memory = memory->total_size;
-   size_t largest_block = total_free_memory;
-   allocation_t *block = NULL;
+   size_t largest_block = 0;
+   allocation_t *big = (allocation_t*)malloc(sizeof(allocation_t));
    int fragments = 0;
 
    allocation_t *current = memory->head; // Começo da lista
@@ -158,17 +196,31 @@ void mymemory_stats(mymemory_t *memory)
       total_allocations++;
       total_allocated_memory += current->size;
 
-      if (current->start == NULL && current->size > largest_block) { // Descobre o maior bloco livre
-         largest_block = current->size;
-         block = current;
-      }
-
       /**
-       * Se o início do bloco current menos o seu tamanho,
-       * não for o início do próximo bloco, há fragmentação
+       * Se o início do bloco current mais o seu tamanho,
+       * não for o início do próximo bloco, há fragmentação...
+       * Ou se ele for o último da lista e ainda houver espaço
+       * na memória, há fragmentação
       */
-      if (current->next != NULL && !((void *)((char *)current->start - current->size) == current->next->start)) {
+      char *block_ptr = ((char *)current->start + current->size);
+      size_t end = (size_t)((char *)memory->pool + memory->total_size) - (size_t)block_ptr;
+      if (current->next != NULL && ((char *)block_ptr != current->next->start)) {
          fragments++;
+         // Verifica o maior bloco
+         if (largest_block < (size_t)((char *)current->next->start) - (size_t)block_ptr) {
+            largest_block = (size_t)((char *)current->next->start) - (size_t)block_ptr;
+            big->start = (char *)block_ptr;
+            big->size = largest_block;
+         }
+      } 
+      else if (current->next == NULL && end > 0) {
+         fragments++;
+         // Verifica o maior bloco
+         if (largest_block < end) {
+            largest_block = end;
+            big->start = (char *)block_ptr;
+            big->size = largest_block;
+         }
       }
 
       current = current->next;
@@ -179,8 +231,10 @@ void mymemory_stats(mymemory_t *memory)
    printf("Total number of allocations: %d\n", total_allocations);
    printf("Total memory allocated: %zu bytes\n", total_allocated_memory);
    printf("Total free memory: %zu bytes\n", total_free_memory);
-   printf("Largest contiguous block of memory\n  start: %p - size: %zu bytes\n", block, largest_block);
+   printf("Largest contiguous block of memory - start: %p, size: %zu bytes\n", big->start, big->size);
    printf("Number of free memory fragments: %d\n", fragments);
+
+   free(big); // Libera a alocação auxiliar
 }
 
 void mymemory_cleanup(mymemory_t *memory)
