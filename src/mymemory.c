@@ -93,7 +93,7 @@ void *mymemory_alloc(mymemory_t *memory, size_t size)
       current = current->next; // Atualiza para o próximo bloco
    }
 
-   if (best_size == SIZE_MAX) { // Não há gap capaz de armazenar o bloco
+   if (best_block == NULL) { // Não há gap capaz de armazenar o bloco
       return NULL;
    } else { // Há um gap capaz de armazenar o bloco
       allocation_t *new_allocation = (allocation_t *)malloc(sizeof(allocation_t));
@@ -208,7 +208,7 @@ void mymemory_stats(mymemory_t *memory)
       total_allocated_memory += current->size;
 
       /**
-       * Se o início do bloco current mais o seu tamanho,
+       * Se o início do bloco current + o seu tamanho
        * não for o início do próximo bloco, há fragmentação...
        * Ou se ele for o último da lista e ainda houver espaço
        * na memória, há fragmentação
