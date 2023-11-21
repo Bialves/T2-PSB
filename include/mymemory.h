@@ -7,6 +7,7 @@ typedef struct allocation
     void *start;
     size_t size;
     struct allocation *next;
+    void *end; // Ptr do fim do bloco
 } allocation_t;
 
 
