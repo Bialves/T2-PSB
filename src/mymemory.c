@@ -134,7 +134,9 @@ void mymemory_free(mymemory_t *memory, void *ptr)
                memory->head = NULL;
             } 
             else { // Se há...
+               // Atualiza a info do novo bloco head
                current->next->start = memory->pool;
+               current->next->end = (char *)memory->pool + current->next->size;
                memory->head = current->next;
             }
          }
