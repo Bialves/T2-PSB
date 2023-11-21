@@ -80,17 +80,21 @@ void *mymemory_alloc(mymemory_t *memory, size_t size)
             }
          }
       }
-      // Fim da lista e não encontrou gaps, mas há espaço para armezenar
-      if (current->next == NULL && best_size == SIZE_MAX &&
-         (size_t)((char *)memory->pool + memory->total_size) - (size_t)current->end >= size) {
-         best_block = current;
-         best_size = (((size_t)(char *)memory->pool) + memory->total_size) - (size_t)best_block->end;
-         break;
-      }
       
       end_prev = (char *)current->end; // Ptr para o fim do bloco atual
       prev = current; // Referência para o bloco atual
       current = current->next; // Atualiza para o próximo bloco
+   }
+   /**
+    * Se chegou ao fim da lista e não encontrou nenhum gap livre
+    * capaz de armazenar o novo bloco, adiciona no fim da lista se
+    * houver espaço.
+    * (também valida se no fim não é mais próximo do 'size' ideal)
+   */
+   size_t pool_end = (size_t)((char *)memory->pool + memory->total_size) - (size_t)prev->end;
+   if (best_size > pool_end && pool_end >= size) {
+      best_block = prev;
+      best_size = (((size_t)(char *)memory->pool) + memory->total_size) - (size_t)best_block->end;
    }
 
    if (best_block == NULL) { // Não há gap capaz de armazenar o bloco
